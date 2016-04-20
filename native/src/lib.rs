@@ -10,6 +10,7 @@ extern crate neon;
 use neon::vm::{Call, JsResult};
 use neon::js::{JsString, JsInteger, JsObject, JsArray, Object};
 use neon::mem::Handle;
+use neon::scope::RootScope;
 
 fn _where(call: Call) -> JsResult<JsArray> {
   use users::dsl::*;
@@ -24,44 +25,41 @@ fn _where(call: Call) -> JsResult<JsArray> {
     .limit(10)
     .load(&connection).unwrap();
 
-  let js_array: Handle<JsArray> = JsArray::new(scope, 3);
-
-  let js_object: Handle<JsObject> = JsObject::new(scope);
-  let _id = JsInteger::new(scope, 1);
-  let _first_name = JsString::new(scope, "Mike");
-  let _last_name = JsString::new(scope, "Piccolo");
-  let _email = JsString::new(scope, "mfpiccolo@gmail.com");
-
-  try!(js_object.set("id", _id));
-  try!(js_object.set("first_name", _first_name.unwrap()));
-  try!(js_object.set("last_name", _last_name.unwrap()));
-  try!(js_object.set("email", _email.unwrap()));
-
-  try!(js_array.set(0, js_object));
-
-  Ok(js_array)
+  (scope, _users).to_js_array()
 }
-
-// fn to_js_array<T: Into<JsObject>>(items: Vec<T>) -> JsArray {
-
-// }
-
-// impl Into<JsObject> for User {
-//   fn into(self) -> JsObject {
-//     let js_object = JsObject::new(scope);
-
-//     ret.set("id", JsInteger::new(scope, 9000));
-//     ret.set("first_name", JsString::new(scope, "Mike"));
-//     ret.set("last_name", JsStrin::new(scope, "Piccolo"));
-//     ret.set("email", JsStrin::new(scope, "mfpiccolo@gmail.com"));
-
-//     js_object
-//   }
-// }
 
 register_module!(m, {
     m.export("where", _where)
 });
+
+trait ToJsArray<'a,T> {
+  fn to_js_array(self) -> JsResult<'a, JsArray>;
+}
+
+impl<'a> ToJsArray<'a, JsArray> for (&'a mut RootScope<'a>, Vec<User>) {
+  fn to_js_array(self) -> JsResult<'a, JsArray> {
+    let scope = self.0;
+    let _users = self.1;
+
+    let js_array: Handle<JsArray> = JsArray::new(scope, _users.len() as u32);
+    let _id = JsInteger::new(scope, 1);
+    let _first_name = JsString::new(scope, "Mike");
+    let _last_name = JsString::new(scope, "Piccolo");
+    let _email = JsString::new(scope, "mfpiccolo@gmail.com");
+
+    for (i, user) in _users.iter().enumerate() {
+      let js_object: Handle<JsObject> = JsObject::new(scope);
+      js_object.set("id", _id);
+      js_object.set("first_name", _first_name.unwrap());
+      js_object.set("last_name", _last_name.unwrap());
+      js_object.set("email", _email.unwrap());
+
+      try!(js_array.set(i as u32, js_object));
+    }
+
+    Ok(js_array)
+  }
+}
 
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
@@ -70,10 +68,10 @@ use std::env;
 
 #[derive(Queryable)]
 struct User {
-    pub id: i32,
-    pub first_name: String,
-    pub last_name: String,
-    pub email: String,
+  id: i32,
+  first_name: String,
+  last_name: String,
+  email: String,
 }
 
 infer_schema!(dotenv!("DATABASE_URL"));
