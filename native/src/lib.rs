@@ -12,7 +12,7 @@ use neon::js::{JsString, JsInteger, JsObject, JsArray, Object};
 use neon::mem::Handle;
 use neon::scope::RootScope;
 
-fn _where(call: Call) -> JsResult<JsArray> {
+fn load(call: Call) -> JsResult<JsArray> {
   use users::dsl::*;
   let scope = call.scope;
 
@@ -29,7 +29,7 @@ fn _where(call: Call) -> JsResult<JsArray> {
 }
 
 register_module!(m, {
-    m.export("where", _where)
+    m.export("load", load)
 });
 
 trait ToJsArray<'a,T> {
