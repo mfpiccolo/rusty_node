@@ -1,2 +1,3 @@
 #!/bin/bash
-node -e 'require("./dist/uglify.js")'
+node -e 'require("./dist/index.js")'
+# node -e 'require("./dist/uglify.js")'

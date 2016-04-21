@@ -10,12 +10,12 @@ const gulp = require('gulp'),
 gulp.task('js-fef', function(){
   return gulp.src(['lib/diesel_node/*.js', 'lib/models/*.js', 'lib/index.js'])
     .pipe(babel({presets: ['es2015']}))
-    .pipe(sourcemaps.init())
+    // .pipe(sourcemaps.init())
     .pipe(concat('index.js'))
     .pipe(gulp.dest('./dist'))
-    .pipe(rename('uglify.js'))
-    .pipe(uglify())
-    .pipe(sourcemaps.write('./'))
+    // .pipe(rename('uglify.js'))
+    // .pipe(uglify())
+    // .pipe(sourcemaps.write('./'))
     .pipe(gulp.dest('dist'));
 });
 
