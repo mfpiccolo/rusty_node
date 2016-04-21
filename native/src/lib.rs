@@ -7,17 +7,20 @@ extern crate dotenv;
 #[macro_use]
 extern crate neon;
 
+#[macro_use]
+mod to_js;
+
 use neon::vm::{Call, JsResult};
 use neon::js::{JsString, JsInteger, JsObject, JsArray, Object};
 use neon::mem::Handle;
 use neon::scope::RootScope;
-use std::fmt::Debug;
+use to_js::ToJsArray;
 
 fn load(call: Call) -> JsResult<JsArray> {
   use users::dsl::*;
   let scope = call.scope;
 
-  let key: Handle<JsString> = try!(try!(call.arguments.require(scope, 0)).check::<JsString>());
+  // let key: Handle<JsString> = try!(try!(call.arguments.require(scope, 0)).check::<JsString>());
   let value: Handle<JsString> = try!(try!(call.arguments.require(scope, 1)).check::<JsString>());
   let string = &value.value()[..];
   let connection = establish_connection();
@@ -33,40 +36,12 @@ register_module!(m, {
     m.export("load", load)
 });
 
-trait ToJsArray<'a, T> {
-  fn to_js_array(self) -> JsResult<'a, JsArray>;
-}
-
-macro_rules! configure_model {
-  (
-    $model:ty,
-    $js_int:ident => [ $( ( $int_key:expr, $int_name:ident ), )* ],
-    $js_string:ident => [ $( ( $string_key:expr, $string_name:ident ), )* ],
-  ) => {
-    impl<'a> ToJsArray<'a, JsArray> for (&'a mut RootScope<'a>, Vec<$model>) {
-      fn to_js_array(self) -> JsResult<'a, JsArray> {
-        let scope = self.0;
-        let records = self.1;
-
-        let js_array: Handle<JsArray> = JsArray::new(scope, records.len() as u32);
-
-        for (i, record) in records.iter().enumerate() {
-          let js_object: Handle<JsObject> = JsObject::new(scope);
-
-          $(js_object.set($int_key, $js_int::new(scope, record.$int_name));)*
-          $(js_object.set(
-              $string_key,
-              $js_string::new(scope, &record.$string_name[..]).unwrap()
-            );
-          )*
-
-          try!(js_array.set(i as u32, js_object));
-        }
-
-        Ok(js_array)
-      }
-    }
-  }
+#[derive(Queryable, Debug)]
+struct User {
+  id: i32,
+  first_name: String,
+  last_name: String,
+  email: String,
 }
 
 configure_model!(
@@ -79,40 +54,10 @@ configure_model!(
   ],
 );
 
-// // TODO: remove once con macro is in place
-// impl<'a> ToJsArray<'a, JsArray> for (&'a mut RootScope<'a>, Vec<User>) {
-//   fn to_js_array(self) -> JsResult<'a, JsArray> {
-//     let scope = self.0;
-//     let records = self.1;
-
-//     let js_array: Handle<JsArray> = JsArray::new(scope, records.len() as u32);
-
-//     for (i, record) in records.iter().enumerate() {
-//       let js_object: Handle<JsObject> = JsObject::new(scope);
-//       js_object.set("id", JsInteger::new(scope, record.id));
-//       js_object.set("first_name", JsString::new(scope, &record.first_name[..]).unwrap());
-//       js_object.set("last_name", JsString::new(scope, &record.last_name[..]).unwrap());
-//       js_object.set("email", JsString::new(scope, &record.email[..]).unwrap());
-
-//       try!(js_array.set(i as u32, js_object));
-//     }
-
-//     Ok(js_array)
-//   }
-// }
-
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use dotenv::dotenv;
 use std::env;
-
-#[derive(Queryable, Debug)]
-struct User {
-  id: i32,
-  first_name: String,
-  last_name: String,
-  email: String,
-}
 
 infer_schema!(dotenv!("DATABASE_URL"));
 
