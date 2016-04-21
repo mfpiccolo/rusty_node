@@ -6,7 +6,12 @@
   "author": "Mike Piccolo <mfpiccolo@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "gulp-babel": "^6.1.2",
     "gulp-batch": "^1.0.5",
+    "gulp-concat": "^2.6.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-sourcemaps": "^2.0.0-alpha",
+    "gulp-uglify": "^1.5.3",
     "neon-cli": "^0.1.7"
   },
   "scripts": {

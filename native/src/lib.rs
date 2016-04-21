@@ -42,17 +42,13 @@ impl<'a> ToJsArray<'a, JsArray> for (&'a mut RootScope<'a>, Vec<User>) {
     let _users = self.1;
 
     let js_array: Handle<JsArray> = JsArray::new(scope, _users.len() as u32);
-    let _id = JsInteger::new(scope, 1);
-    let _first_name = JsString::new(scope, "Mike");
-    let _last_name = JsString::new(scope, "Piccolo");
-    let _email = JsString::new(scope, "mfpiccolo@gmail.com");
 
     for (i, user) in _users.iter().enumerate() {
       let js_object: Handle<JsObject> = JsObject::new(scope);
-      js_object.set("id", _id);
-      js_object.set("first_name", _first_name.unwrap());
-      js_object.set("last_name", _last_name.unwrap());
-      js_object.set("email", _email.unwrap());
+      js_object.set("id", JsInteger::new(scope, 1));
+      js_object.set("first_name", JsString::new(scope, "Mike").unwrap());
+      js_object.set("last_name", JsString::new(scope, "Piccolo").unwrap());
+      js_object.set("email", JsString::new(scope, "mfpiccolo@gmail.com").unwrap());
 
       try!(js_array.set(i as u32, js_object));
     }
