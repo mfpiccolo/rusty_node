@@ -37,11 +37,11 @@ trait ToJsArray<'a, T> {
   fn to_js_array(self) -> JsResult<'a, JsArray>;
 }
 
-macro_rules! configur_model {
+macro_rules! configure_model {
   (
     $model:ty,
-    $type1:ident => $integer_columns:expr,
-    $type2:ident => $e:expr,
+    $js_int:ident => [ $( ( $int_key:expr, $int_name:ident ), )* ],
+    $js_string:ident => [ $( ( $string_key:expr, $string_name:ident ), )* ],
   ) => {
     impl<'a> ToJsArray<'a, JsArray> for (&'a mut RootScope<'a>, Vec<$model>) {
       fn to_js_array(self) -> JsResult<'a, JsArray> {
@@ -53,15 +53,12 @@ macro_rules! configur_model {
         for (i, record) in records.iter().enumerate() {
           let js_object: Handle<JsObject> = JsObject::new(scope);
 
-          // TODO want to expand this out into
-          // for int_column in $integer_columns {
-          //   js_object.set(int_column.1, $type1::new(scope, record.int_column.2));
-          // }
-
-          js_object.set("id", $type1::new(scope, record.id));
-          js_object.set("first_name", $type2::new(scope, &record.first_name[..]).unwrap());
-          js_object.set("last_name", $type2::new(scope, &record.last_name[..]).unwrap());
-          js_object.set("email", $type2::new(scope, &record.email[..]).unwrap());
+          $(js_object.set($int_key, $js_int::new(scope, record.$int_name));)*
+          $(js_object.set(
+              $string_key,
+              $js_string::new(scope, &record.$string_name[..]).unwrap()
+            );
+          )*
 
           try!(js_array.set(i as u32, js_object));
         }
@@ -72,9 +69,9 @@ macro_rules! configur_model {
   }
 }
 
-configur_model!(
+configure_model!(
   User,
-  JsInteger => [("id", id)],
+  JsInteger => [("id", id),],
   JsString => [
     ("first_name", first_name),
     ("last_name", last_name),
@@ -82,6 +79,7 @@ configur_model!(
   ],
 );
 
+// // TODO: remove once con macro is in place
 // impl<'a> ToJsArray<'a, JsArray> for (&'a mut RootScope<'a>, Vec<User>) {
 //   fn to_js_array(self) -> JsResult<'a, JsArray> {
 //     let scope = self.0;
