@@ -14,6 +14,7 @@ use neon::vm::{Call, JsResult};
 use neon::js::{JsString, JsInteger, JsObject, JsArray, Object};
 use neon::mem::Handle;
 use neon::scope::RootScope;
+use neon::js::class::Class;
 use to_js::ToJsArray;
 
 fn load(call: Call) -> JsResult<JsArray> {
@@ -31,9 +32,7 @@ fn load(call: Call) -> JsResult<JsArray> {
   (scope, records).to_js_array()
 }
 
-register_module!(m, {
-    m.export("load", load)
-});
+
 
 #[derive(Queryable, Debug)]
 struct User {
@@ -61,11 +60,50 @@ use std::env;
 infer_schema!(dotenv!("DATABASE_URL"));
 
 pub fn establish_connection() -> PgConnection {
-    dotenv().ok();
+  dotenv().ok();
 
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url)
-        .expect(&format!("Error connecting to {}", database_url))
+  let database_url = env::var("DATABASE_URL")
+    .expect("DATABASE_URL must be set");
+  PgConnection::establish(&database_url)
+    .expect(&format!("Error connecting to {}", database_url))
 }
 
+
+declare_types! {
+
+  pub class JsUser for User {
+
+    init(call) {
+      let scope = call.scope;
+      let _id = try!(try!(call.arguments.require(scope, 0)).check::<JsInteger>());
+      let _first_name: Handle<JsString> = try!(try!(call.arguments.require(scope, 1)).check::<JsString>());
+      let _last_name: Handle<JsString> = try!(try!(call.arguments.require(scope, 1)).check::<JsString>());
+      let _email: Handle<JsString> = try!(try!(call.arguments.require(scope, 1)).check::<JsString>());
+
+      Ok(User {
+        id: _id.value() as i32,
+        first_name: _first_name.value(),
+        last_name: _last_name.value(),
+        email: _email.value(),
+      })
+    }
+
+    // method name(call) {
+    //   let scope = call.scope;
+    //   let this: Handle<JsUser> = call.arguments.this(scope);
+    //   let name = try!(vm::lock(this, |user| {
+    //     user.name.clone()
+    //   }));
+    //   Ok(try!(JsString::new_or_throw(scope, &name[..])).upcast())
+    // }
+  }
+}
+
+
+register_module!(m, {
+  let scope = m.scope;
+  let class = try!(JsUser::class(scope));       // get the class
+  let constructor = try!(class.constructor(scope)); // get the constructor
+  try!(m.exports.set("User", constructor));     // export the constructor
+  m.export("load", load);
+});
