@@ -25,10 +25,9 @@ fn load(call: Call) -> JsResult<JsArray> {
   let string = &value.value()[..];
   let connection = establish_connection();
 
-  let records: Vec<User> = users.filter(first_name.eq(string))
-    .limit(10)
-    .load(&connection).unwrap();
-
+  let query = users.filter(first_name.eq(string)).limit(10);
+  print_sql!(query);
+  let records = query.load(&connection).unwrap();
   (scope, records).to_js_array()
 }
 

@@ -1,3 +1,8 @@
-# rusty_node
+# Setup
 
+```
+npm i
+gulp
+bin/run
+```
 
