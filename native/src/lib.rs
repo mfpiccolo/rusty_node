@@ -14,8 +14,8 @@ use neon::vm::{Call, JsResult};
 use neon::js::{JsString, JsInteger, JsObject, JsArray, Object};
 use neon::mem::Handle;
 use neon::scope::RootScope;
-use neon::js::class::Class;
 use to_js::ToJsArray;
+use neon::js::class::Class;
 
 fn load(call: Call) -> JsResult<JsArray> {
   use users::dsl::*;
@@ -32,10 +32,8 @@ fn load(call: Call) -> JsResult<JsArray> {
   (scope, records).to_js_array()
 }
 
-
-
 #[derive(Queryable, Debug)]
-struct User {
+pub struct User {
   id: i32,
   first_name: String,
   last_name: String,
@@ -67,7 +65,6 @@ pub fn establish_connection() -> PgConnection {
   PgConnection::establish(&database_url)
     .expect(&format!("Error connecting to {}", database_url))
 }
-
 
 declare_types! {
 
@@ -101,9 +98,10 @@ declare_types! {
 
 
 register_module!(m, {
+  let r = m.export("load", load);
   let scope = m.scope;
   let class = try!(JsUser::class(scope));       // get the class
   let constructor = try!(class.constructor(scope)); // get the constructor
   try!(m.exports.set("User", constructor));     // export the constructor
-  m.export("load", load);
+  r
 });
