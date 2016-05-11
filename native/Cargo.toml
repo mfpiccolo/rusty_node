@@ -9,7 +9,7 @@ name = "rusty_node"
 crate-type = ["dylib"]
 
 [dependencies]
-neon = "0.1"
+neon = { git = "https://github.com/rustbridge/neon" }
 diesel = "0.6.1"
 diesel_codegen = { version = "0.6.1", default-features = false, features = ["nightly", "postgres"] }
 dotenv = "0.8.0"

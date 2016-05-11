@@ -9,6 +9,7 @@ pub trait ToJsArray<'a, T> {
 macro_rules! configure_model {
   (
     $model:ty,
+    $js_model:ident,
     $js_int:ident => [ $( ( $int_key:expr, $int_name:ident ), )* ],
     $js_string:ident => [ $( ( $string_key:expr, $string_name:ident ), )* ],
   ) => {
@@ -20,6 +21,10 @@ macro_rules! configure_model {
         let js_array: Handle<JsArray> = JsArray::new(scope, records.len() as u32);
 
         for (i, record) in records.iter().enumerate() {
+          // let ctor: JsUser = JsUser::constructor(scope);
+          // let args: Vec<Handle<JsValue>> = vec![];
+          // let user = try!(ctor.construct(scope, args));
+
           let js_object: Handle<JsObject> = JsObject::new(scope);
 
           $(js_object.set($int_key, $js_int::new(scope, record.$int_name));)*

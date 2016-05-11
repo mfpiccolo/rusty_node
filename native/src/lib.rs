@@ -11,7 +11,7 @@ extern crate neon;
 mod to_js;
 
 use neon::vm::{Call, JsResult};
-use neon::js::{JsString, JsInteger, JsObject, JsArray, Object};
+use neon::js::{JsString, JsInteger, JsObject, JsArray, Object, JsValue, JsFunction};
 use neon::mem::Handle;
 use neon::scope::RootScope;
 use to_js::ToJsArray;
@@ -40,16 +40,6 @@ pub struct User {
   email: String,
 }
 
-configure_model!(
-  User,
-  JsInteger => [("id", id),],
-  JsString => [
-    ("first_name", first_name),
-    ("last_name", last_name),
-    ("email", email),
-  ],
-);
-
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use dotenv::dotenv;
@@ -74,8 +64,8 @@ declare_types! {
       let scope = call.scope;
       let _id = try!(try!(call.arguments.require(scope, 0)).check::<JsInteger>());
       let _first_name: Handle<JsString> = try!(try!(call.arguments.require(scope, 1)).check::<JsString>());
-      let _last_name: Handle<JsString> = try!(try!(call.arguments.require(scope, 1)).check::<JsString>());
-      let _email: Handle<JsString> = try!(try!(call.arguments.require(scope, 1)).check::<JsString>());
+      let _last_name: Handle<JsString> = try!(try!(call.arguments.require(scope, 2)).check::<JsString>());
+      let _email: Handle<JsString> = try!(try!(call.arguments.require(scope, 3)).check::<JsString>());
 
       Ok(User {
         id: _id.value() as i32,
@@ -96,7 +86,6 @@ declare_types! {
   }
 }
 
-
 register_module!(m, {
   let r = m.export("load", load);
   let scope = m.scope;
@@ -105,3 +94,15 @@ register_module!(m, {
   try!(m.exports.set("User", constructor));     // export the constructor
   r
 });
+
+configure_model!(
+  User,
+  JsUser,
+  JsInteger => [("id", id),],
+  JsString => [
+    ("first_name", first_name),
+    ("last_name", last_name),
+    ("email", email),
+  ],
+);
+

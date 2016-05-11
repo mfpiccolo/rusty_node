@@ -8,7 +8,11 @@ const gulp = require('gulp'),
       sourcemaps = require('gulp-sourcemaps');
 
 gulp.task('js-fef', function(){
-  return gulp.src(['lib/diesel_node/*.js', 'lib/models/*.js', 'lib/index.js'])
+  return gulp.src([
+      'lib/diesel_node/*.js',
+      'lib/models/*.js',
+      'lib/tables/*.js',
+      'lib/index.js'])
     .pipe(babel({presets: ['es2015']}))
     // .pipe(sourcemaps.init())
     .pipe(concat('index.js'))
